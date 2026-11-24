@@ -1,0 +1,107 @@
+ssh -l admin 192.168.99.3
+
+enable
+show running-config
+show vlan brief
+show interfaces trunk
+show standby brief
+
+show ip access-lists SERVER-ACCESS
+show crypto key mypubkey rsa
+
+show ip access-lists SERVER-ACCESS
+show ip access-lists DEPT-ISOLATION
+show ip interface brief | include Vlan20|Vlan150
+show arp
+show ip interface brief | include Vlan
+show standby brief
+
+Firewall:
+show access-list
+show running-config access-group
+show running-config nat
+show running-config service-policy
+show running-config policy-map
+show running-config class-map
+show running-config crypto
+
+
+
+Routers:
+enable
+show version
+show running-config
+show startup-config
+show clock
+show ip interface brief
+show interfaces
+show interfaces description
+show ip interface
+show ip route
+show ip protocols
+show ip cef
+show arp
+show standby brief
+show ip ospf
+show ip ospf neighbor
+show ip ospf database
+show ip eigrp neighbors
+show ip eigrp topology
+show ip rip database
+show access-lists
+show ip access-lists
+show ip nat translations
+show ip nat statistics
+show running-config | include ip nat
+show cdp neighbors
+show cdp neighbors detail
+show lldp neighbors
+show lldp neighbors detail
+show logging
+show tcp brief
+show users
+show privilege
+show running-config | include username
+show running-config | include enable
+show running-config | include access-list
+
+
+
+
+Routers
+show ip route
+show ip protocols
+show ip ospf neighbor
+show ip ospf database
+show ip eigrp neighbors
+show ip eigrp topology
+show standby brief
+show ip nat translations
+show ip nat statistics
+show access-lists
+
+Switches
+show vlan brief
+show interfaces trunk
+show interfaces status
+show spanning-tree
+show etherchannel summary
+show mac address-table
+show port-security
+show ip interface brief
+
+
+
+Firewall
+enable
+show running-config
+show version
+show interface ip brief
+show route
+show arp
+show access-list
+show nat
+show xlate
+show conn
+show nameif
+show failover

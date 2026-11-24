@@ -1,0 +1,47 @@
+configure terminal
+hostname CLINIC-CORE-SW
+
+enable secret Clinic@123
+username admin privilege 15 secret Clinic@123
+
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+no profinet
+
+ip routing
+no ip domain-lookup
+spanning-tree mode pvst
+
+interface FastEthernet0/1
+ description LINK-TO-FW-CLINIC
+ switchport mode access
+exit
+
+interface FastEthernet0/2
+ description LINK-TO-CLINIC-PC
+ switchport mode access
+exit
+
+interface Vlan1
+ ip address 192.168.2.2 255.255.255.0
+exit
+
+ip default-gateway 192.168.2.1
+ip classless
+ip route 0.0.0.0 0.0.0.0 192.168.2.1
+
+ip flow-export version 9
+
+line con 0
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login
+exit
+
+end
+write memory

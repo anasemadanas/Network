@@ -1,0 +1,103 @@
+enable
+configure terminal
+
+hostname FW-HOSP-2
+domain-name hospital.local
+
+! =========================================
+! 1. INTERFACES & SECURITY LEVELS
+! =========================================
+interface GigabitEthernet1/1
+ nameif FW-LINK
+ security-level 100
+ ip address 172.16.254.34 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/2
+ nameif CORE2
+ security-level 100
+ ip address 172.16.254.26 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/3
+ nameif CORE1
+ security-level 100
+ ip address 172.16.254.10 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/4
+ nameif ROUTER1
+ security-level 0
+ ip address 172.16.253.17 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/5
+ nameif ROUTER2
+ security-level 0
+ ip address 172.16.253.9 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/6
+ shutdown
+exit
+
+interface GigabitEthernet1/7
+ shutdown
+exit
+
+interface GigabitEthernet1/8
+ shutdown
+exit
+
+interface Management1/1
+ management-only
+ shutdown
+exit
+
+! =========================================
+! 2. STATIC ROUTES (aligned with CORE)
+! =========================================
+route ROUTER1 0.0.0.0 0.0.0.0 172.16.253.18 1
+route ROUTER2 0.0.0.0 0.0.0.0 172.16.253.10 10
+route CORE1 192.168.0.0 255.255.0.0 172.16.254.9 1
+route CORE2 192.168.0.0 255.255.0.0 172.16.254.25 10
+route CORE1 172.16.10.0 255.255.255.0 172.16.254.9 1
+route CORE2 172.16.10.0 255.255.255.0 172.16.254.25 10
+
+! =========================================
+! 3. ACLs & POLICY INSPECTION
+! =========================================
+access-list R2-TEST extended permit icmp host 172.16.253.18 host 172.16.10.13
+access-list R2-TEST extended permit icmp host 8.8.8.8 host 172.16.10.13
+
+class-map inspection_default
+ match default-inspection-traffic
+exit
+
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum 512
+exit
+
+policy-map global_policy
+ class inspection_default
+  inspect dns preset_dns_map
+  inspect ftp
+  inspect icmp
+  inspect tftp
+ class class-default
+  inspect icmp
+exit
+
+service-policy global_policy global
+
+telnet timeout 5
+ssh timeout 5
+
+end
+write memory

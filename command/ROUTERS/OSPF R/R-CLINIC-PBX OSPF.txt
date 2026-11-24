@@ -1,0 +1,1131 @@
+enable
+configure terminal
+
+hostname R-CLINIC-PBX
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+ip dhcp excluded-address 30.30.0.1 30.30.0.9
+
+ip dhcp pool CLINIC-VOICE
+ network 30.30.0.0 255.255.255.0
+ default-router 30.30.0.1
+ option 150 ip 30.30.0.1
+exit
+
+no ip cef
+no ipv6 cef
+no ip domain-lookup
+
+spanning-tree mode pvst
+
+interface FastEthernet0/0
+ description CLINIC-VOICE-NETWORK
+ ip address 30.30.0.1 255.255.255.0
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface FastEthernet0/1
+ description TO-ZAIN-OLT
+ ip address 172.16.61.2 255.255.255.252
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+ip classless
+ip route 0.0.0.0 0.0.0.0 172.16.61.1
+
+no ip route 20.20.0.0 255.255.255.0 172.16.61.1
+no ip route 10.10.10.0 255.255.255.0 172.16.61.1
+
+router ospf 1
+ router-id 10.255.6.2
+ passive-interface default
+ no passive-interface FastEthernet0/1
+ network 30.30.0.0 0.0.0.255 area 0
+ network 172.16.61.0 0.0.0.3 area 0
+exit
+
+ip flow-export version 9
+
+! =========================================
+! REMOVE OLD DIAL PEERS
+! =========================================
+
+no dial-peer voice 1 voip
+no dial-peer voice 2 voip
+no dial-peer voice 3 voip
+no dial-peer voice 4 voip
+no dial-peer voice 9 voip
+no dial-peer voice 30 voip
+no dial-peer voice 2004 voip
+
+! =========================================
+! CLINIC LOCAL & SUMMARY DIAL PEERS (UPDATED)
+! =========================================
+
+dial-peer voice 13 voip
+ destination-pattern 100
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 14 voip
+ destination-pattern 101
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 15 voip
+ destination-pattern 102
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 16 voip
+ destination-pattern 11.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 17 voip
+ destination-pattern 8[0-2].
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 115 voip
+ destination-pattern 115
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 116 voip
+ destination-pattern 116
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 201 voip
+ destination-pattern [0-5]
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 202 voip
+ destination-pattern [1-9].
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 203 voip
+ destination-pattern 1[12].
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 300 voip
+ destination-pattern 300
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 301 voip
+ destination-pattern 301
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 302 voip
+ destination-pattern 302
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 303 voip
+ destination-pattern 303
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 304 voip
+ destination-pattern 304
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 305 voip
+ destination-pattern 305
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 800 voip
+ destination-pattern 80
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 802 voip
+ destination-pattern 82
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 803 voip
+ destination-pattern 83
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 804 voip
+ destination-pattern 84
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 805 voip
+ destination-pattern 85
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 810 voip
+ destination-pattern 810
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 811 voip
+ destination-pattern 811
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 812 voip
+ destination-pattern 812
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 813 voip
+ destination-pattern 813
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 814 voip
+ destination-pattern 814
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 815 voip
+ destination-pattern 815
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 816 voip
+ destination-pattern 816
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 817 voip
+ destination-pattern 817
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 818 voip
+ destination-pattern 818
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 819 voip
+ destination-pattern 819
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 820 voip
+ destination-pattern 82.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 830 voip
+ destination-pattern 83.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 840 voip
+ destination-pattern 84.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 850 voip
+ destination-pattern 85.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 860 voip
+ destination-pattern 86.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 870 voip
+ destination-pattern 87.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 880 voip
+ destination-pattern 88.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 890 voip
+ destination-pattern 89.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 8110 voip
+ destination-pattern 811.
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 8120 voip
+ destination-pattern 812.
+ session target ipv4:20.20.0.1
+exit
+
+! =========================================
+! CLINIC TO HOSPITAL - EXACT DIAL PEERS
+! =========================================
+
+dial-peer voice 1000 voip
+ description TO-HOSPITAL-EXTENSION-0
+ destination-pattern 0
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1001 voip
+ description TO-HOSPITAL-EXTENSION-1
+ destination-pattern 1
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1002 voip
+ description TO-HOSPITAL-EXTENSION-2
+ destination-pattern 2
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1003 voip
+ description TO-HOSPITAL-EXTENSION-3
+ destination-pattern 3
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1004 voip
+ description TO-HOSPITAL-EXTENSION-4
+ destination-pattern 4
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1005 voip
+ description TO-HOSPITAL-EXTENSION-5
+ destination-pattern 5
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1010 voip
+ description TO-HOSPITAL-EXTENSION-10-910
+ destination-pattern 910
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1011 voip
+ description TO-HOSPITAL-EXTENSION-11-911
+ destination-pattern 911
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1012 voip
+ description TO-HOSPITAL-EXTENSION-12
+ destination-pattern 12
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1013 voip
+ description TO-HOSPITAL-EXTENSION-13
+ destination-pattern 13
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1014 voip
+ description TO-HOSPITAL-EXTENSION-14
+ destination-pattern 14
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1015 voip
+ description TO-HOSPITAL-EXTENSION-15
+ destination-pattern 15
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1016 voip
+ description TO-HOSPITAL-EXTENSION-16
+ destination-pattern 16
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1017 voip
+ description TO-HOSPITAL-EXTENSION-17
+ destination-pattern 17
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1018 voip
+ description TO-HOSPITAL-EXTENSION-18
+ destination-pattern 18
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1019 voip
+ description TO-HOSPITAL-EXTENSION-19
+ destination-pattern 19
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1020 voip
+ description TO-HOSPITAL-EXTENSION-20
+ destination-pattern 20
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1021 voip
+ description TO-HOSPITAL-EXTENSION-21
+ destination-pattern 21
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1022 voip
+ description TO-HOSPITAL-EXTENSION-22
+ destination-pattern 22
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1023 voip
+ description TO-HOSPITAL-EXTENSION-23
+ destination-pattern 23
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1024 voip
+ description TO-HOSPITAL-EXTENSION-24
+ destination-pattern 24
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1025 voip
+ description TO-HOSPITAL-EXTENSION-25
+ destination-pattern 25
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1026 voip
+ description TO-HOSPITAL-EXTENSION-26
+ destination-pattern 26
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1027 voip
+ description TO-HOSPITAL-EXTENSION-27
+ destination-pattern 27
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1028 voip
+ description TO-HOSPITAL-EXTENSION-28
+ destination-pattern 28
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1029 voip
+ description TO-HOSPITAL-EXTENSION-29
+ destination-pattern 29
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1030 voip
+ description TO-HOSPITAL-EXTENSION-30
+ destination-pattern 30
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1031 voip
+ description TO-HOSPITAL-EXTENSION-31
+ destination-pattern 31
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1032 voip
+ description TO-HOSPITAL-EXTENSION-32
+ destination-pattern 32
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1033 voip
+ description TO-HOSPITAL-EXTENSION-33
+ destination-pattern 33
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1034 voip
+ description TO-HOSPITAL-EXTENSION-34
+ destination-pattern 34
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1035 voip
+ description TO-HOSPITAL-EXTENSION-35
+ destination-pattern 35
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1036 voip
+ description TO-HOSPITAL-EXTENSION-36
+ destination-pattern 36
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1037 voip
+ description TO-HOSPITAL-EXTENSION-37
+ destination-pattern 37
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1038 voip
+ description TO-HOSPITAL-EXTENSION-38
+ destination-pattern 38
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1039 voip
+ description TO-HOSPITAL-EXTENSION-39
+ destination-pattern 39
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1040 voip
+ description TO-HOSPITAL-EXTENSION-40
+ destination-pattern 40
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1041 voip
+ description TO-HOSPITAL-EXTENSION-41
+ destination-pattern 41
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1042 voip
+ description TO-HOSPITAL-EXTENSION-42
+ destination-pattern 42
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1043 voip
+ description TO-HOSPITAL-EXTENSION-43
+ destination-pattern 43
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1044 voip
+ description TO-HOSPITAL-EXTENSION-44
+ destination-pattern 44
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1045 voip
+ description TO-HOSPITAL-EXTENSION-45
+ destination-pattern 45
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1046 voip
+ description TO-HOSPITAL-EXTENSION-46
+ destination-pattern 46
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1047 voip
+ description TO-HOSPITAL-EXTENSION-47
+ destination-pattern 47
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1048 voip
+ description TO-HOSPITAL-EXTENSION-48
+ destination-pattern 48
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1049 voip
+ description TO-HOSPITAL-EXTENSION-49
+ destination-pattern 49
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1050 voip
+ description TO-HOSPITAL-EXTENSION-50
+ destination-pattern 50
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1051 voip
+ description TO-HOSPITAL-EXTENSION-51
+ destination-pattern 51
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1052 voip
+ description TO-HOSPITAL-EXTENSION-52
+ destination-pattern 52
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1053 voip
+ description TO-HOSPITAL-EXTENSION-53
+ destination-pattern 53
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1054 voip
+ description TO-HOSPITAL-EXTENSION-54
+ destination-pattern 54
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1055 voip
+ description TO-HOSPITAL-EXTENSION-55
+ destination-pattern 55
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1056 voip
+ description TO-HOSPITAL-EXTENSION-56
+ destination-pattern 56
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1057 voip
+ description TO-HOSPITAL-EXTENSION-57
+ destination-pattern 57
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1058 voip
+ description TO-HOSPITAL-EXTENSION-58
+ destination-pattern 58
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1059 voip
+ description TO-HOSPITAL-EXTENSION-59
+ destination-pattern 59
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1060 voip
+ description TO-HOSPITAL-EXTENSION-60
+ destination-pattern 60
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1061 voip
+ description TO-HOSPITAL-EXTENSION-61
+ destination-pattern 61
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1062 voip
+ description TO-HOSPITAL-EXTENSION-62
+ destination-pattern 62
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1063 voip
+ description TO-HOSPITAL-EXTENSION-63
+ destination-pattern 63
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1064 voip
+ description TO-HOSPITAL-EXTENSION-64
+ destination-pattern 64
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1065 voip
+ description TO-HOSPITAL-EXTENSION-65
+ destination-pattern 65
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1066 voip
+ description TO-HOSPITAL-EXTENSION-66
+ destination-pattern 66
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1067 voip
+ description TO-HOSPITAL-EXTENSION-67
+ destination-pattern 67
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1068 voip
+ description TO-HOSPITAL-EXTENSION-68
+ destination-pattern 68
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1069 voip
+ description TO-HOSPITAL-EXTENSION-69
+ destination-pattern 69
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1070 voip
+ description TO-HOSPITAL-EXTENSION-70
+ destination-pattern 70
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1071 voip
+ description TO-HOSPITAL-EXTENSION-71
+ destination-pattern 71
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1072 voip
+ description TO-HOSPITAL-EXTENSION-72
+ destination-pattern 72
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1073 voip
+ description TO-HOSPITAL-EXTENSION-73
+ destination-pattern 73
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1074 voip
+ description TO-HOSPITAL-EXTENSION-74
+ destination-pattern 74
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1075 voip
+ description TO-HOSPITAL-EXTENSION-75
+ destination-pattern 75
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1076 voip
+ description TO-HOSPITAL-EXTENSION-76
+ destination-pattern 76
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1077 voip
+ description TO-HOSPITAL-EXTENSION-77
+ destination-pattern 77
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1078 voip
+ description TO-HOSPITAL-EXTENSION-78
+ destination-pattern 78
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1079 voip
+ description TO-HOSPITAL-EXTENSION-79
+ destination-pattern 79
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1080 voip
+ description TO-HOSPITAL-EXTENSION-80
+ destination-pattern 80
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1081 voip
+ description TO-HOSPITAL-EXTENSION-81
+ destination-pattern 81
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1082 voip
+ description TO-HOSPITAL-EXTENSION-82
+ destination-pattern 82
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1083 voip
+ description TO-HOSPITAL-EXTENSION-83
+ destination-pattern 83
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1084 voip
+ description TO-HOSPITAL-EXTENSION-84
+ destination-pattern 84
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1085 voip
+ description TO-HOSPITAL-EXTENSION-85
+ destination-pattern 85
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1086 voip
+ description TO-HOSPITAL-EXTENSION-86
+ destination-pattern 86
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1087 voip
+ description TO-HOSPITAL-EXTENSION-87
+ destination-pattern 87
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1088 voip
+ description TO-HOSPITAL-EXTENSION-88
+ destination-pattern 88
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1089 voip
+ description TO-HOSPITAL-EXTENSION-89
+ destination-pattern 89
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1090 voip
+ description TO-HOSPITAL-EXTENSION-90
+ destination-pattern 90
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1091 voip
+ description TO-HOSPITAL-EXTENSION-91
+ destination-pattern 91
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1092 voip
+ description TO-HOSPITAL-EXTENSION-92
+ destination-pattern 92
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1093 voip
+ description TO-HOSPITAL-EXTENSION-93
+ destination-pattern 93
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1094 voip
+ description TO-HOSPITAL-EXTENSION-94
+ destination-pattern 94
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1095 voip
+ description TO-HOSPITAL-EXTENSION-95
+ destination-pattern 95
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1096 voip
+ description TO-HOSPITAL-EXTENSION-96
+ destination-pattern 96
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1097 voip
+ description TO-HOSPITAL-EXTENSION-97
+ destination-pattern 97
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1098 voip
+ description TO-HOSPITAL-EXTENSION-98
+ destination-pattern 98
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1099 voip
+ description TO-HOSPITAL-EXTENSION-99
+ destination-pattern 99
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1110 voip
+ description TO-HOSPITAL-EXTENSION-110-9110
+ destination-pattern 9110
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1111 voip
+ description TO-HOSPITAL-EXTENSION-111
+ destination-pattern 111
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1112 voip
+ description TO-HOSPITAL-EXTENSION-112
+ destination-pattern 112
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1113 voip
+ description TO-HOSPITAL-EXTENSION-113
+ destination-pattern 113
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1114 voip
+ description TO-HOSPITAL-EXTENSION-114
+ destination-pattern 114
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1115 voip
+ description TO-HOSPITAL-EXTENSION-115
+ destination-pattern 115
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1116 voip
+ description TO-HOSPITAL-EXTENSION-116
+ destination-pattern 116
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1117 voip
+ description TO-HOSPITAL-EXTENSION-117
+ destination-pattern 117
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1118 voip
+ description TO-HOSPITAL-EXTENSION-118
+ destination-pattern 118
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1119 voip
+ description TO-HOSPITAL-EXTENSION-119
+ destination-pattern 119
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1120 voip
+ description TO-HOSPITAL-EXTENSION-120
+ destination-pattern 120
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1121 voip
+ description TO-HOSPITAL-EXTENSION-121
+ destination-pattern 121
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1122 voip
+ description TO-HOSPITAL-EXTENSION-122
+ destination-pattern 122
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1123 voip
+ description TO-HOSPITAL-EXTENSION-123
+ destination-pattern 123
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1124 voip
+ description TO-HOSPITAL-EXTENSION-124
+ destination-pattern 124
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1125 voip
+ description TO-HOSPITAL-EXTENSION-125
+ destination-pattern 125
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1126 voip
+ description TO-HOSPITAL-EXTENSION-126
+ destination-pattern 126
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1127 voip
+ description TO-HOSPITAL-EXTENSION-127
+ destination-pattern 127
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1128 voip
+ description TO-HOSPITAL-EXTENSION-128
+ destination-pattern 128
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1129 voip
+ description TO-HOSPITAL-EXTENSION-129
+ destination-pattern 129
+ session target ipv4:20.20.0.1
+exit
+
+! =========================================
+! CLINIC TO HOME-VOIP (UPDATED)
+! =========================================
+
+dial-peer voice 2000 voip
+ description TO-UMNIAH-HOME-VOIP
+ destination-pattern 2000
+ session target ipv4:10.10.10.1
+exit
+
+! =========================================
+! TELEPHONY SERVICE
+! =========================================
+
+telephony-service
+ max-ephones 20
+ max-dn 20
+ ip source-address 30.30.0.1 port 2000
+ auto-reg-ephone
+ auto assign 1 to 10
+ create cnf-files
+exit
+
+! =========================================
+! CLINIC EXTENSIONS 300-309 (AUTO)
+! =========================================
+
+ephone-dn 1
+ number 300
+ name CLINIC-01
+exit
+
+ephone-dn 2
+ number 301
+ name CLINIC-02
+exit
+
+ephone-dn 3
+ number 302
+ name CLINIC-03
+exit
+
+ephone-dn 4
+ number 303
+ name CLINIC-04
+exit
+
+ephone-dn 5
+ number 304
+ name CLINIC-05
+exit
+
+ephone-dn 6
+ number 305
+ name CLINIC-06
+exit
+
+ephone-dn 7
+ number 306
+ name CLINIC-07
+exit
+
+ephone-dn 8
+ number 307
+ name CLINIC-08
+exit
+
+ephone-dn 9
+ number 308
+ name CLINIC-09
+exit
+
+ephone-dn 10
+ number 309
+ name CLINIC-10
+exit
+
+! =========================================
+! CLINIC EXTENSIONS 310-319 (MANUAL)
+! =========================================
+
+ephone-dn 11
+ number 310
+ name CLINIC-MANUAL-01
+exit
+
+ephone-dn 12
+ number 311
+ name CLINIC-MANUAL-02
+exit
+
+ephone-dn 13
+ number 312
+ name CLINIC-MANUAL-03
+exit
+
+ephone-dn 14
+ number 313
+ name CLINIC-MANUAL-04
+exit
+
+ephone-dn 15
+ number 314
+ name CLINIC-MANUAL-05
+exit
+
+ephone-dn 16
+ number 315
+ name CLINIC-MANUAL-06
+exit
+
+ephone-dn 17
+ number 316
+ name CLINIC-MANUAL-07
+exit
+
+ephone-dn 18
+ number 317
+ name CLINIC-MANUAL-08
+exit
+
+ephone-dn 19
+ number 318
+ name CLINIC-MANUAL-09
+exit
+
+ephone-dn 20
+ number 319
+ name CLINIC-MANUAL-10
+exit
+
+! =========================================
+! CONSOLE / VTY
+! =========================================
+
+line con 0
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+exit
+
+end
+write memory

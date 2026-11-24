@@ -1,0 +1,92 @@
+enable
+configure terminal
+
+hostname R-HOSP-2
+
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+ip cef
+no ipv6 cef
+
+ip ssh version 2
+no ip domain-lookup
+ip domain-name hospital.local
+
+spanning-tree mode pvst
+
+interface GigabitEthernet0/0
+ description LINK-TO-ISP
+ ip address 200.10.10.3 255.255.255.248
+ ip nat outside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/1
+ description LINK-TO-FW-HOSP-2
+ ip address 172.16.253.18 255.255.255.248
+ ip nat inside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/2
+ description LINK-TO-FW-HOSP-1
+ ip address 172.16.253.26 255.255.255.248
+ ip nat inside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+access-list 1 permit any
+
+ip nat inside source list 1 interface GigabitEthernet0/0 overload
+
+ip classless
+
+ip route 0.0.0.0 0.0.0.0 200.10.10.1
+
+ip route 172.16.254.0 255.255.255.224 172.16.253.17 1
+ip route 172.16.254.0 255.255.255.224 172.16.253.25 10
+
+ip route 192.168.0.0 255.255.0.0 172.16.253.17 1
+ip route 192.168.0.0 255.255.0.0 172.16.253.25 10
+
+ip route 10.10.0.0 255.255.252.0 172.16.253.17 1
+ip route 10.10.0.0 255.255.252.0 172.16.253.25 10
+
+ip route 172.16.10.0 255.255.255.0 172.16.253.17 1
+ip route 172.16.10.0 255.255.255.0 172.16.253.25 10
+
+ip flow-export version 9
+
+banner motd ^CAUTHORIZED ACCESS ONLY^C
+
+line con 0
+ logging synchronous
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+ transport input ssh
+exit
+
+end
+write memory

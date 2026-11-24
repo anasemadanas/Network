@@ -1,0 +1,155 @@
+enable
+configure terminal
+
+hostname FW-HOSP-1
+domain-name hospital.local
+
+! =========================================
+! 1. INTERFACES & SECURITY LEVELS
+! =========================================
+
+interface GigabitEthernet1/1
+ nameif FW-LINK
+ security-level 100
+ ip address 172.16.254.33 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/2
+ nameif CORE1
+ security-level 100
+ ip address 172.16.254.2 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/3
+ nameif CORE2
+ security-level 100
+ ip address 172.16.254.18 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/4
+ nameif ROUTER1
+ security-level 0
+ ip address 172.16.253.1 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/5
+ nameif ROUTER2
+ security-level 0
+ ip address 172.16.253.25 255.255.255.248
+ no shutdown
+exit
+
+interface GigabitEthernet1/6
+ nameif GUEST
+ security-level 50
+ ip address 10.10.0.1 255.255.255.0
+ no shutdown
+exit
+
+interface GigabitEthernet1/7
+ nameif ORANGE-VPN
+ security-level 0
+ ip address 200.10.10.10 255.255.255.252
+ no shutdown
+exit
+
+interface GigabitEthernet1/8
+ shutdown
+exit
+
+interface Management1/1
+ management-only
+ shutdown
+exit
+
+webvpn
+
+! =========================================
+! 2. STATIC ROUTES
+! =========================================
+no route CORE1 192.168.0.0 255.255.0.0 172.16.254.1 1
+no route CORE2 192.168.0.0 255.255.0.0 172.16.254.17 10
+no route CORE1 172.16.10.0 255.255.255.0 172.16.254.1 1
+no route CORE2 172.16.10.0 255.255.255.0 172.16.254.17 10
+
+route ORANGE-VPN 192.168.2.0 255.255.255.0 200.10.10.9 1
+route ORANGE-VPN 100.1.3.2 255.255.255.255 200.10.10.9 1
+route ROUTER1 0.0.0.0 0.0.0.0 172.16.253.2 1
+route ROUTER2 0.0.0.0 0.0.0.0 172.16.253.26 10
+
+router ospf 1
+ router-id 10.254.1.1
+ network 172.16.254.0 255.255.255.248 area 0
+ network 172.16.254.16 255.255.255.248 area 0
+ passive-interface default
+ no passive-interface CORE1
+ no passive-interface CORE2
+exit
+
+! =========================================
+! 3. ACLs & VPN INTERFACE BINDING
+! =========================================
+access-list VPN-CLINIC extended permit ip 172.16.10.0 255.255.255.0 192.168.2.0 255.255.255.0
+access-list VPN-CLINIC extended permit ip host 172.16.10.12 192.168.2.0 255.255.255.0
+access-list VPN-CLINIC extended permit ip host 172.16.10.15 192.168.2.0 255.255.255.0
+
+access-list HOSP-VPN-IN extended permit ip 192.168.2.0 255.255.255.0 172.16.10.0 255.255.255.0
+access-list HOSP-VPN-IN extended permit udp host 100.1.3.2 host 200.10.10.10 eq isakmp
+
+access-group HOSP-VPN-IN in interface ORANGE-VPN
+
+! =========================================
+! 4. GROUP POLICY & IPSEC VPN
+! =========================================
+group-policy DOCTORS internal
+
+crypto map HOSP-MAP 10 match address VPN-CLINIC
+crypto map HOSP-MAP 10 set peer 100.1.3.2
+crypto map HOSP-MAP interface ORANGE-VPN
+
+crypto ikev1 enable ORANGE-VPN
+
+crypto ikev1 policy 10
+ encr aes
+ authentication pre-share
+ group 2
+exit
+
+tunnel-group 100.1.3.2 type ipsec-l2l
+tunnel-group 100.1.3.2 ipsec-attributes
+ ikev1 pre-shared-key ClinicHospVPN2026!
+exit
+
+! =========================================
+! 5. INSPECTION & MANAGEMENT TIMEOUTS
+! =========================================
+class-map inspection_default
+ match default-inspection-traffic
+exit
+
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum 512
+exit
+
+policy-map global_policy
+ class inspection_default
+  inspect dns preset_dns_map
+  inspect ftp
+  inspect icmp
+  inspect tftp
+ class class-default
+  inspect icmp
+exit
+
+service-policy global_policy global
+
+telnet timeout 5
+ssh timeout 5
+
+end
+write memory

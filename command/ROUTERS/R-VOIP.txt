@@ -1,0 +1,679 @@
+enable
+configure terminal
+
+hostname R-VOIP
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+ip dhcp excluded-address 20.20.0.1 20.20.0.9
+
+ip dhcp pool VOICE
+ network 20.20.0.0 255.255.255.0
+ default-router 20.20.0.1
+ option 150 ip 20.20.0.1
+exit
+
+no ip cef
+no ipv6 cef
+no ip domain-lookup
+
+spanning-tree mode pvst
+
+interface FastEthernet0/0
+ description CONNECTION-TO-VOICE-SW
+ ip address 20.20.0.1 255.255.255.0
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface FastEthernet0/1
+ description TO-HOSPITAL-WAN
+ ip address 172.16.60.2 255.255.255.252
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+ip classless
+ip route 30.30.0.0 255.255.255.0 172.16.60.1
+ip route 0.0.0.0 0.0.0.0 172.16.60.1
+ip route 10.10.10.0 255.255.255.0 172.16.60.1
+
+ip flow-export version 9
+
+! =========================================
+! DIAL PEERS - HOSPITAL TO CLINIC & HOME-VOIP
+! =========================================
+
+no dial-peer voice 30 voip
+no dial-peer voice 2004 voip
+
+dial-peer voice 31 voip
+ description TO-CLINIC-3XX
+ destination-pattern 3..
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 300 voip
+ description TO-CLINIC-EXTENSION-300
+ destination-pattern 300
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 301 voip
+ description TO-CLINIC-EXTENSION-301
+ destination-pattern 301
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 302 voip
+ description TO-CLINIC-EXTENSION-302
+ destination-pattern 302
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 303 voip
+ description TO-CLINIC-EXTENSION-303
+ destination-pattern 303
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 304 voip
+ description TO-CLINIC-EXTENSION-304
+ destination-pattern 304
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 305 voip
+ description TO-CLINIC-EXTENSION-305
+ destination-pattern 305
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 306 voip
+ description TO-CLINIC-EXTENSION-306
+ destination-pattern 306
+ session target ipv4:30.30.0.1
+exit
+
+dial-peer voice 2000 voip
+ description TO-UMNIAH-HOME-VOIP
+ destination-pattern 2000
+ session target ipv4:10.10.10.1
+exit
+
+! =========================================
+! TELEPHONY SERVICE
+! =========================================
+
+telephony-service
+ max-ephones 42
+ max-dn 144
+ ip source-address 20.20.0.1 port 2000
+ auto-reg-ephone
+ auto assign 1 to 130
+ create cnf-files
+exit
+
+! =========================================
+! VLAN 20 - RECEPTION (0 - 5)
+! =========================================
+
+ephone-dn 130
+ number 0
+ name RECEPTION-01
+exit
+
+ephone-dn 1
+ number 1
+ name RECEPTION-02
+exit
+
+ephone-dn 2
+ number 2
+ name RECEPTION-03
+exit
+
+ephone-dn 3
+ number 3
+ name RECEPTION-04
+exit
+
+ephone-dn 4
+ number 4
+ name RECEPTION-05
+exit
+
+ephone-dn 5
+ number 5
+ name RECEPTION-06
+exit
+
+! =========================================
+! VLAN 10 - IT (10 - 19)
+! =========================================
+
+ephone-dn 10
+ number 10
+ name IT-01
+exit
+ephone-dn 11
+ number 11
+ name IT-02
+exit
+ephone-dn 12
+ number 12
+ name IT-03
+exit
+ephone-dn 13
+ number 13
+ name IT-04
+exit
+ephone-dn 14
+ number 14
+ name IT-05
+exit
+ephone-dn 15
+ number 15
+ name IT-06
+exit
+ephone-dn 16
+ number 16
+ name IT-07
+exit
+ephone-dn 17
+ number 17
+ name IT-08
+exit
+ephone-dn 18
+ number 18
+ name IT-09
+exit
+ephone-dn 19
+ number 19
+ name IT-10
+exit
+
+! =========================================
+! VLAN 30 - ACCOUNTING (20 - 29)
+! =========================================
+
+ephone-dn 20
+ number 20
+ name ACCOUNTING-01
+exit
+ephone-dn 21
+ number 21
+ name ACCOUNTING-02
+exit
+ephone-dn 22
+ number 22
+ name ACCOUNTING-03
+exit
+ephone-dn 23
+ number 23
+ name ACCOUNTING-04
+exit
+ephone-dn 24
+ number 24
+ name ACCOUNTING-05
+exit
+ephone-dn 25
+ number 25
+ name ACCOUNTING-06
+exit
+ephone-dn 26
+ number 26
+ name ACCOUNTING-07
+exit
+ephone-dn 27
+ number 27
+ name ACCOUNTING-08
+exit
+ephone-dn 28
+ number 28
+ name ACCOUNTING-09
+exit
+ephone-dn 29
+ number 29
+ name ACCOUNTING-10
+exit
+
+! =========================================
+! VLAN 40 - LAB (30 - 39)
+! =========================================
+
+ephone-dn 30
+ number 30
+ name LAB-01
+exit
+ephone-dn 31
+ number 31
+ name LAB-02
+exit
+ephone-dn 32
+ number 32
+ name LAB-03
+exit
+ephone-dn 33
+ number 33
+ name LAB-04
+exit
+ephone-dn 34
+ number 34
+ name LAB-05
+exit
+ephone-dn 35
+ number 35
+ name LAB-06
+exit
+ephone-dn 36
+ number 36
+ name LAB-07
+exit
+ephone-dn 37
+ number 37
+ name LAB-08
+exit
+ephone-dn 38
+ number 38
+ name LAB-09
+exit
+ephone-dn 39
+ number 39
+ name LAB-10
+exit
+
+! =========================================
+! VLAN 50 - RADIOLOGY (40 - 49)
+! =========================================
+
+ephone-dn 40
+ number 40
+ name RADIOLOGY-01
+exit
+ephone-dn 41
+ number 41
+ name RADIOLOGY-02
+exit
+ephone-dn 42
+ number 42
+ name RADIOLOGY-03
+exit
+ephone-dn 43
+ number 43
+ name RADIOLOGY-04
+exit
+ephone-dn 44
+ number 44
+ name RADIOLOGY-05
+exit
+ephone-dn 45
+ number 45
+ name RADIOLOGY-06
+exit
+ephone-dn 46
+ number 46
+ name RADIOLOGY-07
+exit
+ephone-dn 47
+ number 47
+ name RADIOLOGY-08
+exit
+ephone-dn 48
+ number 48
+ name RADIOLOGY-09
+exit
+ephone-dn 49
+ number 49
+ name RADIOLOGY-10
+exit
+
+! =========================================
+! VLAN 60 - STORE (50 - 59)
+! =========================================
+
+ephone-dn 50
+ number 50
+ name STORE-01
+exit
+ephone-dn 51
+ number 51
+ name STORE-02
+exit
+ephone-dn 52
+ number 52
+ name STORE-03
+exit
+ephone-dn 53
+ number 53
+ name STORE-04
+exit
+ephone-dn 54
+ number 54
+ name STORE-05
+exit
+ephone-dn 55
+ number 55
+ name STORE-06
+exit
+ephone-dn 56
+ number 56
+ name STORE-07
+exit
+ephone-dn 57
+ number 57
+ name STORE-08
+exit
+ephone-dn 58
+ number 58
+ name STORE-09
+exit
+ephone-dn 59
+ number 59
+ name STORE-10
+exit
+
+! =========================================
+! VLAN 70 - EMERGENCY (60 - 69)
+! =========================================
+
+ephone-dn 60
+ number 60
+ name EMERGENCY-01
+exit
+ephone-dn 61
+ number 61
+ name EMERGENCY-02
+exit
+ephone-dn 62
+ number 62
+ name EMERGENCY-03
+exit
+ephone-dn 63
+ number 63
+ name EMERGENCY-04
+exit
+ephone-dn 64
+ number 64
+ name EMERGENCY-05
+exit
+ephone-dn 65
+ number 65
+ name EMERGENCY-06
+exit
+ephone-dn 66
+ number 66
+ name EMERGENCY-07
+exit
+ephone-dn 67
+ number 67
+ name EMERGENCY-08
+exit
+ephone-dn 68
+ number 68
+ name EMERGENCY-09
+exit
+ephone-dn 69
+ number 69
+ name EMERGENCY-10
+exit
+
+! =========================================
+! VLAN 80 - PHARMACY (70 - 79)
+! =========================================
+
+ephone-dn 70
+ number 70
+ name PHARMACY-01
+exit
+ephone-dn 71
+ number 71
+ name PHARMACY-02
+exit
+ephone-dn 72
+ number 72
+ name PHARMACY-03
+exit
+ephone-dn 73
+ number 73
+ name PHARMACY-04
+exit
+ephone-dn 74
+ number 74
+ name PHARMACY-05
+exit
+ephone-dn 75
+ number 75
+ name PHARMACY-06
+exit
+ephone-dn 76
+ number 76
+ name PHARMACY-07
+exit
+ephone-dn 77
+ number 77
+ name PHARMACY-08
+exit
+ephone-dn 78
+ number 78
+ name PHARMACY-09
+exit
+ephone-dn 79
+ number 79
+ name PHARMACY-10
+exit
+
+! =========================================
+! VLAN 90 - HR (80 - 89)
+! =========================================
+
+ephone-dn 80
+ number 80
+ name HR-01
+exit
+ephone-dn 81
+ number 81
+ name HR-02
+exit
+ephone-dn 82
+ number 82
+ name HR-03
+exit
+ephone-dn 83
+ number 83
+ name HR-04
+exit
+ephone-dn 84
+ number 84
+ name HR-05
+exit
+ephone-dn 85
+ number 85
+ name HR-06
+exit
+ephone-dn 86
+ number 86
+ name HR-07
+exit
+ephone-dn 87
+ number 87
+ name HR-08
+exit
+ephone-dn 88
+ number 88
+ name HR-09
+exit
+ephone-dn 89
+ number 89
+ name HR-10
+exit
+
+! =========================================
+! VLAN 100 - RECORDS (90 - 99)
+! =========================================
+
+ephone-dn 90
+ number 90
+ name RECORDS-01
+exit
+ephone-dn 91
+ number 91
+ name RECORDS-02
+exit
+ephone-dn 92
+ number 92
+ name RECORDS-03
+exit
+ephone-dn 93
+ number 93
+ name RECORDS-04
+exit
+ephone-dn 94
+ number 94
+ name RECORDS-05
+exit
+ephone-dn 95
+ number 95
+ name RECORDS-06
+exit
+ephone-dn 96
+ number 96
+ name RECORDS-07
+exit
+ephone-dn 97
+ number 97
+ name RECORDS-08
+exit
+ephone-dn 98
+ number 98
+ name RECORDS-09
+exit
+ephone-dn 99
+ number 99
+ name RECORDS-10
+exit
+
+! =========================================
+! VLAN 110 - ADMIN (110 - 119)
+! =========================================
+
+ephone-dn 110
+ number 110
+ name ADMIN-01
+exit
+ephone-dn 111
+ number 111
+ name ADMIN-02
+exit
+ephone-dn 112
+ number 112
+ name ADMIN-03
+exit
+ephone-dn 113
+ number 113
+ name ADMIN-04
+exit
+ephone-dn 114
+ number 114
+ name ADMIN-05
+exit
+ephone-dn 115
+ number 115
+ name ADMIN-06
+exit
+ephone-dn 116
+ number 116
+ name ADMIN-07
+exit
+ephone-dn 117
+ number 117
+ name ADMIN-08
+exit
+ephone-dn 118
+ number 118
+ name ADMIN-09
+exit
+ephone-dn 119
+ number 119
+ name ADMIN-10
+exit
+
+! =========================================
+! VLAN 120 - MAINTENANCE (120 - 129)
+! =========================================
+
+ephone-dn 120
+ number 120
+ name MAINTENANCE-01
+exit
+ephone-dn 121
+ number 121
+ name MAINTENANCE-02
+exit
+ephone-dn 122
+ number 122
+ name MAINTENANCE-03
+exit
+ephone-dn 123
+ number 123
+ name MAINTENANCE-04
+exit
+ephone-dn 124
+ number 124
+ name MAINTENANCE-05
+exit
+ephone-dn 125
+ number 125
+ name MAINTENANCE-06
+exit
+ephone-dn 126
+ number 126
+ name MAINTENANCE-07
+exit
+ephone-dn 127
+ number 127
+ name MAINTENANCE-08
+exit
+ephone-dn 128
+ number 128
+ name MAINTENANCE-09
+exit
+ephone-dn 129
+ number 129
+ name MAINTENANCE-10
+exit
+
+! =========================================
+! MANUAL EPHONE ASSIGNMENT
+! =========================================
+
+ephone 9
+ button 1:130
+exit
+
+line con 0
+ logging synchronous
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+ transport input ssh
+exit
+
+end
+write memory

@@ -1,0 +1,88 @@
+enable
+configure terminal
+
+hostname R-CLINIC
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+ip cef
+no ipv6 cef
+ip ssh version 2
+no ip domain-lookup
+ip domain-name clinic.local
+
+spanning-tree mode pvst
+
+interface GigabitEthernet0/0
+ description LINK-TO-ZAIN-OLT
+ ip address 100.1.9.2 255.255.255.252
+ ip nat outside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/1
+ description LINK-TO-FW-CLINIC
+ ip address 10.1.1.1 255.255.255.252
+ ip nat inside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/2
+ description TO-R-CLINIC-PBX
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+access-list 50 permit 172.16.50.0 0.0.0.7
+access-list 50 permit 192.168.50.0 0.0.0.255
+access-list 50 permit 192.168.2.0 0.0.0.255
+access-list 50 permit 10.1.1.0 0.0.0.3
+
+ip nat inside source list 50 interface GigabitEthernet0/0 overload
+
+ip classless
+ip route 0.0.0.0 0.0.0.0 100.1.9.1
+no ip route 192.168.2.0 255.255.255.0 10.1.1.2
+no ip route 192.168.50.0 255.255.255.0 10.1.1.2
+
+router ospf 1
+ router-id 10.255.7.1
+ passive-interface default
+ no passive-interface GigabitEthernet0/1
+ network 10.1.1.0 0.0.0.3 area 0
+exit
+
+ip flow-export version 9
+
+banner motd ^CAUTHORIZED ACCESS ONLY^C
+
+line con 0
+ logging synchronous
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+ transport input ssh
+exit
+
+end
+write memory

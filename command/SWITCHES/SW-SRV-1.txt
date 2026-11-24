@@ -1,0 +1,144 @@
+enable
+configure terminal
+hostname SW-SRV-1
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+no profinet
+
+ip ssh version 2
+no ip domain-lookup
+ip domain-name hospital.local
+
+spanning-tree mode pvst
+spanning-tree extend system-id
+
+! =========================================
+! VLAN DEFINITIONS (aligned with CORE switches)
+! =========================================
+vlan 10
+ name IT
+exit
+vlan 130
+ name CCTV
+exit
+vlan 150
+ name SERVERS
+exit
+vlan 999
+ name MANAGEMENT
+exit
+
+! =========================================
+! SERVER & ACCESS PORTS
+! =========================================
+interface FastEthernet0/1
+ switchport access vlan 150
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/2
+ switchport access vlan 150
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/3
+ switchport access vlan 150
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/4
+ switchport access vlan 150
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/5
+ switchport access vlan 150
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/6
+ switchport access vlan 150
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/7
+ description CCTV-NVR-SERVER
+ switchport access vlan 130
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface FastEthernet0/24
+ description IT-MAINTENANCE
+ switchport access vlan 10
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+! =========================================
+! TRUNK PORTS TO CORE SWITCHES
+! =========================================
+interface GigabitEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,130,150,999
+ no shutdown
+exit
+
+interface GigabitEthernet0/2
+ switchport mode trunk
+ switchport trunk allowed vlan 10,130,150,999
+ no shutdown
+exit
+
+! =========================================
+! MANAGEMENT SVI & DEFAULT GATEWAY
+! =========================================
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+interface Vlan999
+ ip address 192.168.99.17 255.255.255.0
+ no shutdown
+exit
+
+ip default-gateway 192.168.99.1
+
+! =========================================
+! VTY ACCESS (Telnet + SSH)
+! =========================================
+line vty 0 4
+ exec-timeout 5 0
+ login local
+ transport input telnet ssh
+exit
+
+line vty 5 15
+ exec-timeout 5 0
+ login local
+ transport input telnet ssh
+exit
+
+end
+write memory

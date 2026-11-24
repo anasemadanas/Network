@@ -1,0 +1,84 @@
+enable
+configure terminal
+
+hostname GLOBAL-BACKBONE
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+no ip cef
+no ipv6 cef
+no ip domain-lookup
+
+spanning-tree mode pvst
+
+interface GigabitEthernet0/0
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+exit
+
+interface GigabitEthernet0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+exit
+
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+exit
+
+interface Serial0/3/0
+ description LINK-TO-GLOBAL-TRANSIT
+ ip address 80.1.2.2 255.255.255.252
+ clock rate 2000000
+ no shutdown
+exit
+
+interface Serial0/3/1
+ no ip address
+ clock rate 2000000
+ shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+router ospf 1
+ router-id 5.5.5.5
+ log-adjacency-changes
+ network 0.0.0.0 255.255.255.255 area 0
+exit
+
+router bgp 65004
+ bgp log-neighbor-changes
+ no synchronization
+ neighbor 80.1.2.1 remote-as 65003
+exit
+
+ip classless
+ip flow-export version 9
+
+line con 0
+ login local
+exit
+
+line aux 0
+ exit
+
+line vty 0 4
+ login local
+exit
+
+end
+write memory

@@ -1,0 +1,115 @@
+enable
+configure terminal
+
+hostname ORANGE-OLT
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+no ip cef
+no ipv6 cef
+no ip domain-lookup
+
+spanning-tree mode pvst
+
+interface GigabitEthernet0/0
+ description TO-HOSPITAL-ONT
+ ip address 200.10.10.1 255.255.255.248
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/1
+ description TO-R-VOIP
+ ip address 172.16.60.1 255.255.255.252
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/2
+ description DIRECT-LINK-TO-FW-HOSP-1-VPN
+ ip address 200.10.10.9 255.255.255.252
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface Serial0/0/0
+ description LINK-TO-ISP-CORE
+ ip address 100.1.8.2 255.255.255.252
+ clock rate 2000000
+ no shutdown
+exit
+
+interface Serial0/0/1
+ no ip address
+ clock rate 2000000
+ shutdown
+exit
+
+interface Serial0/1/0
+ no ip address
+ clock rate 2000000
+ shutdown
+exit
+
+interface Serial0/1/1
+ no ip address
+ clock rate 2000000
+ shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+router ospf 1
+ router-id 6.6.6.6
+ log-adjacency-changes
+ network 0.0.0.0 255.255.255.255 area 0
+ network 200.10.10.0 0.0.0.7 area 0
+ network 200.10.10.8 0.0.0.3 area 0
+exit
+
+ip classless
+ip route 20.20.0.0 255.255.255.0 172.16.60.2
+ip route 30.30.0.0 255.255.255.0 100.1.8.1
+
+! Failover routes to Hospital via R-HOSP-1 (primary) and R-HOSP-2 (backup)
+ip route 172.16.10.0 255.255.255.0 200.10.10.2 1
+ip route 172.16.10.0 255.255.255.0 200.10.10.3 10
+
+ip route 192.168.0.0 255.255.0.0 200.10.10.2 1
+ip route 192.168.0.0 255.255.0.0 200.10.10.3 10
+
+ip route 172.16.254.0 255.255.255.224 200.10.10.2 1
+ip route 172.16.254.0 255.255.255.224 200.10.10.3 10
+
+ip route 10.10.0.0 255.255.252.0 200.10.10.2 1
+ip route 10.10.0.0 255.255.252.0 200.10.10.3 10
+
+! Return route to Clinic network via ISP-CORE
+ip route 192.168.2.0 255.255.255.0 100.1.8.1
+ip route 10.10.10.0 255.255.255.0 100.1.8.1
+
+ip flow-export version 9
+
+line con 0
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+exit
+
+end
+write memory

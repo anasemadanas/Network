@@ -1,0 +1,599 @@
+! =====================================================================
+! CORE-SW-1 - FINAL CONFIG (corrected - no SVI mac-address)
+! ---------------------------------------------------------------------
+! BEFORE APPLYING:
+!   1) Keep a second console session open.
+!   2) Check existing ACLs first: show ip access-lists
+!   3) Run:  reload in 15        (safety net)
+!   4) Apply matching ACL/STP changes on CORE-SW-2 in the same window.
+! AFTER VERIFYING (show spanning-tree summary / show standby brief /
+!   show ip access-lists / SSH login / ping & department tests):
+!   reload cancel
+!   write memory
+! =====================================================================
+
+enable
+configure terminal
+
+! =========================================
+! 1. BASIC CONFIGURATION
+! =========================================
+
+hostname CORE-SW-1
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+service password-encryption
+service timestamps log datetime msec
+service timestamps debug datetime msec
+
+no profinet
+no ip domain-lookup
+ip domain-name hospital.local
+ip routing
+
+! =========================================
+! 2. SSH (RSA keys already exist)
+! =========================================
+
+! Do NOT regenerate keys. Verify first with:  show crypto key mypubkey rsa
+! (the replace-key confirmation prompt can swallow the next pasted line)
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+! =========================================
+! 3. AAA - LOCAL AUTHENTICATION
+! =========================================
+
+no aaa authentication login RADIUS-TEST
+no radius-server host 172.16.10.10
+
+aaa new-model
+aaa authentication login default local
+aaa authentication login VTY-LOGIN local
+
+! =========================================
+! 4. SPANNING TREE (RSTP + PRIORITIES - split lines to avoid truncation)
+! =========================================
+
+spanning-tree mode rapid-pvst
+
+! SW-1 = ROOT for odd VLANs + 999
+spanning-tree vlan 10,30,50,70 priority 24576
+spanning-tree vlan 90,110,130,150 priority 24576
+spanning-tree vlan 999 priority 24576
+
+! SW-1 = SECONDARY for even VLANs (SW-2 is the root)
+spanning-tree vlan 20,40,60,80 priority 28672
+spanning-tree vlan 100,120,140 priority 28672
+
+! =========================================
+! 5. VLAN DEFINITIONS
+! =========================================
+
+vlan 10
+ name IT
+exit
+
+vlan 20
+ name RECEPTION
+exit
+
+vlan 30
+ name ACCOUNTING
+exit
+
+vlan 40
+ name LAB
+exit
+
+vlan 50
+ name RADIOLOGY
+exit
+
+vlan 60
+ name STORE
+exit
+
+vlan 70
+ name EMERGENCY
+exit
+
+vlan 80
+ name PHARMACY
+exit
+
+vlan 90
+ name HR
+exit
+
+vlan 100
+ name RECORDS
+exit
+
+vlan 110
+ name ADMIN
+exit
+
+vlan 120
+ name MAINTENANCE
+exit
+
+vlan 130
+ name CCTV
+exit
+
+vlan 140
+ name SERVICE
+exit
+
+vlan 150
+ name SERVERS
+exit
+
+! Prepared for the later native-VLAN phase (not applied to any trunk yet)
+vlan 998
+ name NATIVE-BLACKHOLE
+exit
+
+vlan 999
+ name MANAGEMENT
+exit
+
+! =========================================
+! 6. TRUNK PORTS - FA0/1 TO FA0/3
+! =========================================
+
+interface FastEthernet0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,999
+ no shutdown
+exit
+
+interface FastEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,999
+ no shutdown
+exit
+
+interface FastEthernet0/3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,999
+ no shutdown
+exit
+
+! =========================================
+! 7. SERVER SWITCH TRUNKS
+! =========================================
+
+interface FastEthernet0/4
+ description LINK-TO-SERVER-SWITCH
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,130,150,999
+ spanning-tree guard root
+ no shutdown
+exit
+
+interface FastEthernet0/5
+ description LINK-TO-SW-SRV-2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 150
+ spanning-tree guard root
+ no shutdown
+exit
+
+! =========================================
+! 8. ACCESS PORT
+! =========================================
+! NOTE: set VLAN (e.g. switchport access vlan 10) or shutdown as needed.
+
+interface FastEthernet0/6
+ switchport mode access
+ spanning-tree portfast
+ no shutdown
+exit
+
+! =========================================
+! 9. LAYER 3 CONNECTIONS
+! =========================================
+
+interface FastEthernet0/7
+ no switchport
+ ip address 172.16.254.9 255.255.255.248
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/1
+ description LINK-TO-CORE-SW-2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,999
+ no shutdown
+exit
+
+interface GigabitEthernet0/2
+ no switchport
+ ip address 172.16.254.1 255.255.255.248
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+! =========================================
+! 10. ACLs (explicit sequence numbers)
+! =========================================
+! Defined BEFORE the interfaces that use them.
+! IT (192.168.10.0/24) is not blocked by DEPT-ISOLATION; TCP established
+! and ICMP echo-reply to IT are permitted before department denies.
+! In SERVER-ACCESS, line 56 permits ICMP echo (ping requests) toward
+! servers (172.16.10.0/24) before line 130 deny.
+
+ip access-list extended DEPT-ISOLATION
+ 10 permit tcp any 192.168.10.0 0.0.0.255 established
+ 20 permit icmp any 192.168.10.0 0.0.0.255 echo-reply
+ 30 deny ip any 192.168.10.0 0.0.0.255
+ 40 deny ip any 192.168.20.0 0.0.0.255
+ 50 deny ip any 192.168.30.0 0.0.0.255
+ 60 deny ip any 192.168.40.0 0.0.0.255
+ 70 deny ip any 192.168.50.0 0.0.0.255
+ 80 deny ip any 192.168.60.0 0.0.0.255
+ 90 deny ip any 192.168.70.0 0.0.0.255
+ 100 deny ip any 192.168.80.0 0.0.0.255
+ 110 deny ip any 192.168.90.0 0.0.0.255
+ 120 deny ip any 192.168.100.0 0.0.0.255
+ 130 deny ip any 192.168.110.0 0.0.0.255
+ 140 deny ip any 192.168.120.0 0.0.0.255
+ 150 deny ip any 192.168.130.0 0.0.0.255
+ 160 deny ip any 192.168.140.0 0.0.0.255
+ 170 permit ip any any
+exit
+
+ip access-list extended MGMT-ONLY
+ 10 permit ip 192.168.10.0 0.0.0.255 192.168.99.0 0.0.0.255
+ 20 deny ip any 192.168.99.0 0.0.0.255
+ 30 permit ip any any
+exit
+
+ip access-list extended SERVER-ACCESS
+ 10 permit ip 192.168.10.0 0.0.0.255 172.16.10.0 0.0.0.255
+ 20 permit ip 192.168.50.0 0.0.0.255 host 172.16.10.15
+ 30 permit udp 192.168.0.0 0.0.255.255 host 172.16.10.11 eq bootps
+ 40 permit udp 192.168.0.0 0.0.255.255 host 172.16.10.10 eq domain
+ 50 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.10 eq domain
+ 55 permit tcp 192.168.0.0 0.0.255.255 172.16.10.0 0.0.0.255 established
+ 56 permit icmp 192.168.0.0 0.0.255.255 172.16.10.0 0.0.0.255 echo
+ 57 permit tcp host 192.168.130.10 host 172.16.10.13 eq www
+ 58 permit tcp host 192.168.130.10 host 172.16.10.13 eq 443
+59 permit icmp 192.168.0.0 0.0.255.255 172.16.10.0 0.0.0.255 echo-reply
+ 60 deny ip 192.168.130.0 0.0.0.255 172.16.10.0 0.0.0.255
+ 70 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.12 eq ftp
+ 80 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.12 eq 20
+ 90 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.12 eq 445
+ 100 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.12 eq 139
+ 110 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.13 eq www
+ 120 permit tcp 192.168.0.0 0.0.255.255 host 172.16.10.13 eq 443
+ 130 deny ip 192.168.0.0 0.0.255.255 172.16.10.0 0.0.0.255
+ 140 permit ip any any
+exit
+
+! =========================================
+! 11. VLAN 10 - IT (no DEPT-ISOLATION)
+! =========================================
+
+interface Vlan10
+ ip address 192.168.10.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 10 ip 192.168.10.1
+ standby 10 priority 110
+ standby 10 preempt
+ no shutdown
+exit
+
+! =========================================
+! 12. VLAN 20 - RECEPTION
+! =========================================
+
+interface Vlan20
+ ip address 192.168.20.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 20 ip 192.168.20.1
+ standby 20 priority 110
+ standby 20 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 13. VLAN 30 - ACCOUNTING
+! =========================================
+
+interface Vlan30
+ ip address 192.168.30.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 30 ip 192.168.30.1
+ standby 30 priority 110
+ standby 30 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 14. VLAN 40 - LAB
+! =========================================
+
+interface Vlan40
+ ip address 192.168.40.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 40 ip 192.168.40.1
+ standby 40 priority 110
+ standby 40 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 15. VLAN 50 - RADIOLOGY
+! =========================================
+
+interface Vlan50
+ ip address 192.168.50.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 50 ip 192.168.50.1
+ standby 50 priority 110
+ standby 50 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 16. VLAN 60 - STORE
+! =========================================
+
+interface Vlan60
+ ip address 192.168.60.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 60 ip 192.168.60.1
+ standby 60 priority 110
+ standby 60 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 17. VLAN 70 - EMERGENCY
+! =========================================
+
+interface Vlan70
+ ip address 192.168.70.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 70 ip 192.168.70.1
+ standby 70 priority 110
+ standby 70 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 18. VLAN 80 - PHARMACY
+! =========================================
+
+interface Vlan80
+ ip address 192.168.80.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 80 ip 192.168.80.1
+ standby 80 priority 110
+ standby 80 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 19. VLAN 90 - HR
+! =========================================
+
+interface Vlan90
+ ip address 192.168.90.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 90 ip 192.168.90.1
+ standby 90 priority 110
+ standby 90 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 20. VLAN 100 - RECORDS
+! =========================================
+
+interface Vlan100
+ ip address 192.168.100.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 100 ip 192.168.100.1
+ standby 100 priority 110
+ standby 100 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 21. VLAN 110 - ADMIN
+! =========================================
+
+interface Vlan110
+ ip address 192.168.110.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 110 ip 192.168.110.1
+ standby 110 priority 110
+ standby 110 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 22. VLAN 120 - MAINTENANCE
+! =========================================
+
+interface Vlan120
+ ip address 192.168.120.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 120 ip 192.168.120.1
+ standby 120 priority 110
+ standby 120 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 23. VLAN 130 - CCTV
+! =========================================
+
+interface Vlan130
+ ip address 192.168.130.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 130 ip 192.168.130.1
+ standby 130 priority 110
+ standby 130 preempt
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 24. VLAN 140 - SERVICE
+! =========================================
+! HSRP: SW-2 is Active here (priority 120). SW-1 stays at default 100.
+
+interface Vlan140
+ ip address 192.168.140.2 255.255.255.0
+ ip helper-address 172.16.10.11
+ standby 140 ip 192.168.140.1
+ ip access-group DEPT-ISOLATION in
+ no shutdown
+exit
+
+! =========================================
+! 25. VLAN 150 - SERVERS
+! =========================================
+
+interface Vlan150
+ ip address 172.16.10.2 255.255.255.0
+ ip access-group SERVER-ACCESS out
+ standby 150 ip 172.16.10.1
+ standby 150 priority 110
+ standby 150 preempt
+ standby 150 track GigabitEthernet0/2
+ no shutdown
+exit
+
+! =========================================
+! 26. VLAN 999 - MANAGEMENT
+! =========================================
+
+interface Vlan999
+ ip address 192.168.99.2 255.255.255.0
+ ip access-group MGMT-ONLY out
+ standby 99 ip 192.168.99.1
+ standby 99 priority 120
+ standby 99 preempt
+ no shutdown
+exit
+
+! =========================================
+! 27. ROUTING
+! =========================================
+
+ip classless
+ip route 0.0.0.0 0.0.0.0 172.16.254.2
+ip route 0.0.0.0 0.0.0.0 172.16.254.10 10
+no ip route 192.168.2.0 255.255.255.0 172.16.254.2
+no ip route 172.16.254.16 255.255.255.248 172.16.254.2
+no ip route 172.16.254.24 255.255.255.248 172.16.254.10
+
+router ospf 1
+router-id 10.255.1.1
+ passive-interface default
+ no passive-interface FastEthernet0/7
+ no passive-interface GigabitEthernet0/1
+ no passive-interface GigabitEthernet0/2
+ network 172.16.254.0 0.0.0.7 area 0
+ network 172.16.254.8 0.0.0.7 area 0
+ network 172.16.10.0 0.0.0.255 area 0
+ network 192.168.10.0 0.0.0.255 area 0
+ network 192.168.20.0 0.0.0.255 area 0
+ network 192.168.30.0 0.0.0.255 area 0
+ network 192.168.40.0 0.0.0.255 area 0
+ network 192.168.50.0 0.0.0.255 area 0
+ network 192.168.60.0 0.0.0.255 area 0
+ network 192.168.70.0 0.0.0.255 area 0
+ network 192.168.80.0 0.0.0.255 area 0
+ network 192.168.90.0 0.0.0.255 area 0
+ network 192.168.100.0 0.0.0.255 area 0
+ network 192.168.110.0 0.0.0.255 area 0
+ network 192.168.120.0 0.0.0.255 area 0
+ network 192.168.130.0 0.0.0.255 area 0
+ network 192.168.140.0 0.0.0.255 area 0
+ network 192.168.99.0 0.0.0.255 area 0
+exit
+
+ip flow-export version 9
+
+! =========================================
+! 28. BANNER
+! =========================================
+
+banner motd ^CAUTHORIZED ACCESS ONLY^C
+
+! =========================================
+! 29. CONSOLE ACCESS (local login via the default AAA list)
+! =========================================
+
+line con 0
+ logging synchronous
+ exec-timeout 5 0
+ login authentication default
+exit
+
+! =========================================
+! 30. SSH / VTY ACCESS
+! =========================================
+
+line vty 0 4
+ no password
+ login authentication VTY-LOGIN
+ exec-timeout 5 0
+ transport input ssh
+exit
+
+line vty 5 15
+ no password
+ login authentication VTY-LOGIN
+ exec-timeout 5 0
+ transport input ssh
+exit
+
+! =========================================
+! 31. UNUSED PORTS / VLAN 1
+! =========================================
+
+interface range FastEthernet0/10 - 20
+ description UNUSED-PORT
+ shutdown
+exit
+
+interface Vlan1
+ shutdown
+exit
+
+end
+
+! AFTER VERIFYING:
+reload cancel
+write memory

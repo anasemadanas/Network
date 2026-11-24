@@ -1,0 +1,124 @@
+enable
+configure terminal
+
+hostname ISP-CORE
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+no ip cef
+no ipv6 cef
+no ip domain-lookup
+
+spanning-tree mode pvst
+
+interface GigabitEthernet0/0
+ description LINK-TO-CENTRAL-OFFICE
+ ip address 100.1.20.1 255.255.255.252
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface GigabitEthernet0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+exit
+
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+exit
+
+interface GigabitEthernet0/0/0
+ description SINGLE-MODE-FIBER-TO-R-UMNIAH
+ ip address 100.1.10.1 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/1/0
+ description LINK-TO-R-UMNIAH
+ no ip address
+ clock rate 2000000
+ no shutdown
+exit
+
+interface Serial0/1/1
+ no ip address
+ clock rate 2000000
+ no shutdown
+exit
+
+interface Serial0/2/0
+ description LINK-TO-ORANGE-OLT
+ ip address 100.1.8.1 255.255.255.252
+ no shutdown
+exit
+
+interface Serial0/2/1
+ description LINK-TO-ZAIN-OLT
+ ip address 100.1.3.1 255.255.255.252
+ ip ospf 1 area 0
+ clock rate 2000000
+ no shutdown
+exit
+
+interface Serial0/3/0
+ description LINK-TO-ISP-EDGE
+ ip address 100.1.6.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+exit
+
+interface Serial0/3/1
+ description LINK-TO-DC-EDGE
+ ip address 100.1.4.1 255.255.255.252
+ no shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+router ospf 1
+ router-id 1.1.1.1
+ log-adjacency-changes
+ redistribute static subnets
+ network 0.0.0.0 255.255.255.255 area 0
+exit
+
+ip classless
+ip route 20.20.0.0 255.255.255.0 100.1.8.2
+ip route 30.30.0.0 255.255.255.0 100.1.3.2
+ip route 200.10.10.8 255.255.255.252 100.1.8.2
+ip route 172.16.10.0 255.255.255.0 100.1.8.2
+ip route 192.168.0.0 255.255.0.0 100.1.8.2
+ip route 192.168.2.0 255.255.255.0 100.1.3.2
+ip route 10.10.10.0 255.255.255.0 100.1.10.2
+ip route 192.168.6.0 255.255.255.0 100.1.10.2
+ip route 172.16.60.0 255.255.255.252 100.1.8.2
+ip route 172.16.61.0 255.255.255.252 100.1.3.2
+
+ip flow-export version 9
+
+line con 0
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+exit
+
+end
+write memory

@@ -1,0 +1,181 @@
+
+enable
+configure terminal
+
+hostname FW-Clinic
+domain-name clinic.local
+
+enable password Clinic@123
+username admin password Clinic@123
+
+! =========================================
+! 1. INTERFACES & SECURITY LEVELS
+! =========================================
+
+interface GigabitEthernet1/1
+ nameif outside1
+ security-level 0
+ ip address 10.1.1.2 255.255.255.252
+ no shutdown
+exit
+
+interface GigabitEthernet1/2
+ nameif outside2
+ security-level 0
+ ip address 10.1.2.2 255.255.255.252
+ no shutdown
+exit
+
+interface GigabitEthernet1/3
+ nameif inside
+ security-level 100
+ ip address 192.168.2.1 255.255.255.0
+ no shutdown
+exit
+
+! GUEST WIFI CONNECTION
+interface GigabitEthernet1/4
+ nameif guest
+ security-level 50
+ ip address 192.168.4.1 255.255.255.0
+ no shutdown
+exit
+
+interface GigabitEthernet1/5
+ shutdown
+exit
+
+interface GigabitEthernet1/6
+ shutdown
+exit
+
+interface GigabitEthernet1/7
+ shutdown
+exit
+
+interface GigabitEthernet1/8
+ shutdown
+exit
+
+interface Management1/1
+ management-only
+ shutdown
+exit
+
+! =========================================
+! 2. NETWORK OBJECTS & NAT
+! =========================================
+
+object network CLINIC-LAN
+ subnet 192.168.2.0 255.255.255.0
+ nat (inside,outside1) dynamic interface
+exit
+
+object network GUEST-UPLINK
+ subnet 192.168.4.0 255.255.255.0
+ nat (guest,outside1) dynamic interface
+exit
+
+object network HOSPITAL-SERVERS
+ subnet 172.16.10.0 255.255.255.0
+exit
+
+! =========================================
+! 3. STATIC ROUTES
+! =========================================
+
+route outside1 0.0.0.0 0.0.0.0 10.1.1.1 1
+no route outside2 172.16.10.0 255.255.255.0 10.1.2.1 1
+route outside2 200.10.10.0 255.255.255.248 10.1.2.1 1
+route outside2 200.10.10.10 255.255.255.255 10.1.2.1 1
+
+router ospf 1
+ router-id 10.255.4.1
+ network 192.168.2.0 255.255.255.0 area 0
+ passive-interface default
+ no passive-interface inside
+exit
+
+! =========================================
+! 4. ACCESS LISTS
+! =========================================
+
+access-list VPN-RETURN extended permit ip host 172.16.10.15 192.168.2.0 255.255.255.0
+access-list VPN-RETURN extended permit ip host 172.16.10.12 192.168.2.0 255.255.255.0
+
+access-list OUTSIDE-IN extended permit icmp host 172.16.50.1 host 172.16.50.2
+
+access-list OUTSIDE1-IN extended permit icmp host 10.1.1.1 host 10.1.1.2
+access-list OUTSIDE1-IN extended permit icmp any host 10.1.1.2
+access-list OUTSIDE1-IN extended permit icmp any host 10.1.1.2 echo-reply
+
+access-list OUTSIDE2-IN extended permit icmp host 10.1.2.1 host 10.1.2.2
+access-list OUTSIDE2-IN extended permit udp host 200.10.10.10 host 10.1.2.2 eq isakmp
+
+access-list VPN-CLINIC extended permit ip 192.168.2.0 255.255.255.0 172.16.10.0 255.255.255.0
+
+access-list INSIDE-OUT extended permit ip any any
+
+access-group OUTSIDE2-IN in interface outside2
+access-group INSIDE-OUT in interface inside
+access-group OUTSIDE1-IN in interface outside1
+
+! =========================================
+! 5. INSPECTION & TIMEOUTS
+! =========================================
+
+class-map inspection_default
+ match default-inspection-traffic
+exit
+
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum 512
+exit
+
+policy-map global_policy
+ class inspection_default
+  inspect dns preset_dns_map
+  inspect ftp
+  inspect icmp
+  inspect tftp
+exit
+
+service-policy global_policy global
+
+telnet timeout 5
+ssh timeout 5
+
+! =========================================
+! 6. DHCP ON INSIDE INTERFACE
+! =========================================
+
+dhcpd dns 8.8.8.8
+dhcpd lease 86400
+dhcpd address 192.168.2.10-192.168.2.100 inside
+dhcpd lease 86400 interface inside
+dhcpd enable inside
+
+! =========================================
+! 7. VPN PARAMETERS
+! =========================================
+
+crypto map CLINIC-MAP 10 match address VPN-CLINIC
+crypto map CLINIC-MAP 10 set peer 200.10.10.10
+crypto map CLINIC-MAP interface outside2
+
+crypto ikev1 enable outside2
+
+crypto ikev1 policy 10
+ encr aes
+ authentication pre-share
+ group 2
+exit
+
+tunnel-group 200.10.10.10 type ipsec-l2l
+tunnel-group 200.10.10.10 ipsec-attributes
+ ikev1 pre-shared-key ClinicHospVPN2026!
+exit
+
+end
+write memory

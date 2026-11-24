@@ -1,0 +1,539 @@
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname R-VOIP
+!
+!
+!
+enable secret 5 $1$mERr$kku/hiJPh.4Yp8Xor/4kz1
+!
+!
+ip dhcp excluded-address 20.20.0.1 20.20.0.9
+!
+ip dhcp pool VOICE
+ network 20.20.0.0 255.255.255.0
+ default-router 20.20.0.1
+ option 150 ip 20.20.0.1
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+username admin privilege 15 secret 5 $1$mERr$kku/hiJPh.4Yp8Xor/4kz1
+!
+!
+license udi pid CISCO2811/K9 sn FTX1017M109-
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain-lookup
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ description CONNECTION-TO-VOICE-SW
+ ip address 20.20.0.1 255.255.255.0
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/1
+ description TO-HOSPITAL-WAN
+ ip address 172.16.60.2 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+ip classless
+ip route 30.30.0.0 255.255.255.0 172.16.60.1 
+ip route 0.0.0.0 0.0.0.0 172.16.60.1 
+ip route 10.10.10.0 255.255.255.0 172.16.60.1 
+!
+ip flow-export version 9
+!
+!
+!
+!
+!
+!
+!
+dial-peer voice 31 voip
+ destination-pattern 3..
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 300 voip
+ destination-pattern 300
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 301 voip
+ destination-pattern 301
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 302 voip
+ destination-pattern 302
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 303 voip
+ destination-pattern 303
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 304 voip
+ destination-pattern 304
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 305 voip
+ destination-pattern 305
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 306 voip
+ destination-pattern 306
+ session target ipv4:30.30.0.1
+!
+dial-peer voice 2000 voip
+ destination-pattern 2000
+ session target ipv4:10.10.10.1
+!
+telephony-service
+ max-ephones 42
+ max-dn 144
+ ip source-address 20.20.0.1 port 2000
+ auto assign 1 to 130
+!
+ephone-dn 130
+ number 0
+!
+ephone-dn 1
+ number 1
+!
+ephone-dn 2
+ number 2
+!
+ephone-dn 3
+ number 3
+!
+ephone-dn 4
+ number 4
+!
+ephone-dn 5
+ number 5
+!
+ephone-dn 10
+ number 10
+!
+ephone-dn 11
+ number 11
+!
+ephone-dn 12
+ number 12
+!
+ephone-dn 13
+ number 13
+!
+ephone-dn 14
+ number 14
+!
+ephone-dn 15
+ number 15
+!
+ephone-dn 16
+ number 16
+!
+ephone-dn 17
+ number 17
+!
+ephone-dn 18
+ number 18
+!
+ephone-dn 19
+ number 19
+!
+ephone-dn 20
+ number 20
+!
+ephone-dn 21
+ number 21
+!
+ephone-dn 22
+ number 22
+!
+ephone-dn 23
+ number 23
+!
+ephone-dn 24
+ number 24
+!
+ephone-dn 25
+ number 25
+!
+ephone-dn 26
+ number 26
+!
+ephone-dn 27
+ number 27
+!
+ephone-dn 28
+ number 28
+!
+ephone-dn 29
+ number 29
+!
+ephone-dn 30
+ number 30
+!
+ephone-dn 31
+ number 31
+!
+ephone-dn 32
+ number 32
+!
+ephone-dn 33
+ number 33
+!
+ephone-dn 34
+ number 34
+!
+ephone-dn 35
+ number 35
+!
+ephone-dn 36
+ number 36
+!
+ephone-dn 37
+ number 37
+!
+ephone-dn 38
+ number 38
+!
+ephone-dn 39
+ number 39
+!
+ephone-dn 40
+ number 40
+!
+ephone-dn 41
+ number 41
+!
+ephone-dn 42
+ number 42
+!
+ephone-dn 43
+ number 43
+!
+ephone-dn 44
+ number 44
+!
+ephone-dn 45
+ number 45
+!
+ephone-dn 46
+ number 46
+!
+ephone-dn 47
+ number 47
+!
+ephone-dn 48
+ number 48
+!
+ephone-dn 49
+ number 49
+!
+ephone-dn 50
+ number 50
+!
+ephone-dn 51
+ number 51
+!
+ephone-dn 52
+ number 52
+!
+ephone-dn 53
+ number 53
+!
+ephone-dn 54
+ number 54
+!
+ephone-dn 55
+ number 55
+!
+ephone-dn 56
+ number 56
+!
+ephone-dn 57
+ number 57
+!
+ephone-dn 58
+ number 58
+!
+ephone-dn 59
+ number 59
+!
+ephone-dn 60
+ number 60
+!
+ephone-dn 61
+ number 61
+!
+ephone-dn 62
+ number 62
+!
+ephone-dn 63
+ number 63
+!
+ephone-dn 64
+ number 64
+!
+ephone-dn 65
+ number 65
+!
+ephone-dn 66
+ number 66
+!
+ephone-dn 67
+ number 67
+!
+ephone-dn 68
+ number 68
+!
+ephone-dn 69
+ number 69
+!
+ephone-dn 70
+ number 70
+!
+ephone-dn 71
+ number 71
+!
+ephone-dn 72
+ number 72
+!
+ephone-dn 73
+ number 73
+!
+ephone-dn 74
+ number 74
+!
+ephone-dn 75
+ number 75
+!
+ephone-dn 76
+ number 76
+!
+ephone-dn 77
+ number 77
+!
+ephone-dn 78
+ number 78
+!
+ephone-dn 79
+ number 79
+!
+ephone-dn 80
+ number 80
+!
+ephone-dn 81
+ number 81
+!
+ephone-dn 82
+ number 82
+!
+ephone-dn 83
+ number 83
+!
+ephone-dn 84
+ number 84
+!
+ephone-dn 85
+ number 85
+!
+ephone-dn 86
+ number 86
+!
+ephone-dn 87
+ number 87
+!
+ephone-dn 88
+ number 88
+!
+ephone-dn 89
+ number 89
+!
+ephone-dn 90
+ number 90
+!
+ephone-dn 91
+ number 91
+!
+ephone-dn 92
+ number 92
+!
+ephone-dn 93
+ number 93
+!
+ephone-dn 94
+ number 94
+!
+ephone-dn 95
+ number 95
+!
+ephone-dn 96
+ number 96
+!
+ephone-dn 97
+ number 97
+!
+ephone-dn 98
+ number 98
+!
+ephone-dn 99
+ number 99
+!
+ephone-dn 110
+ number 110
+!
+ephone-dn 111
+ number 111
+!
+ephone-dn 112
+ number 112
+!
+ephone-dn 113
+ number 113
+!
+ephone-dn 114
+ number 114
+!
+ephone-dn 115
+ number 115
+!
+ephone-dn 116
+ number 116
+!
+ephone-dn 117
+ number 117
+!
+ephone-dn 118
+ number 118
+!
+ephone-dn 119
+ number 119
+!
+ephone-dn 120
+ number 120
+!
+ephone-dn 121
+ number 121
+!
+ephone-dn 122
+ number 122
+!
+ephone-dn 123
+ number 123
+!
+ephone-dn 124
+ number 124
+!
+ephone-dn 125
+ number 125
+!
+ephone-dn 126
+ number 126
+!
+ephone-dn 127
+ number 127
+!
+ephone-dn 128
+ number 128
+!
+ephone-dn 129
+ number 129
+!
+ephone 1
+ device-security-mode none
+ mac-address 0001.9655.6AD4
+ type 7960
+ button 1:1
+!
+ephone 2
+ device-security-mode none
+ mac-address 0009.7CAE.E9C4
+ type 7960
+ button 1:2
+!
+ephone 3
+ device-security-mode none
+ mac-address 000A.F310.54BB
+ type 7960
+ button 1:3
+!
+ephone 4
+ device-security-mode none
+ mac-address 00E0.B098.CD04
+ type 7960
+ button 1:4
+!
+ephone 5
+ device-security-mode none
+ mac-address 0001.C719.2BE9
+ type 7960
+ button 1:5
+!
+ephone 6
+ device-security-mode none
+ mac-address 000A.F364.76B1
+ type 7960
+ button 1:10
+!
+ephone 7
+ device-security-mode none
+ mac-address 0001.63A4.6032
+ type 7960
+ button 1:11
+!
+ephone 8
+ device-security-mode none
+ mac-address 0002.4A8D.E747
+ type 7960
+ button 1:12
+!
+ephone 9
+ device-security-mode none
+ mac-address 0060.2FD3.A1AE
+ type 7960
+ button 1:130
+!
+line con 0
+ logging synchronous
+ login local
+!
+line aux 0
+!
+line vty 0 4
+ login local
+ transport input ssh
+!
+!
+!
+end
+

@@ -1,0 +1,680 @@
+enable
+configure terminal
+
+hostname R-PHONE-HOME
+no ip domain-lookup
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+
+enable secret Admin@123
+username admin privilege 15 secret Admin@123
+
+ip dhcp excluded-address 10.10.10.1 10.10.10.10
+
+ip dhcp pool HOME-VOIP
+ network 10.10.10.0 255.255.255.0
+ default-router 10.10.10.1
+ option 150 ip 10.10.10.1
+ dns-server 8.8.8.8
+exit
+
+no ip cef
+no ipv6 cef
+
+spanning-tree mode pvst
+
+interface FastEthernet0/0
+ description LINK-TO-R-UMNIAH
+ ip address 192.168.6.2 255.255.255.0
+ ip nat outside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface FastEthernet0/1
+ description DIRECT-LINK-TO-HOME-VOIP
+ ip address 10.10.10.1 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+ no shutdown
+exit
+
+interface Vlan1
+ no ip address
+ shutdown
+exit
+
+ip classless
+ip route 0.0.0.0 0.0.0.0 192.168.6.1
+no ip route 20.20.0.0 255.255.255.0 192.168.6.1
+no ip route 30.30.0.0 255.255.255.0 192.168.6.1
+
+router ospf 1
+ router-id 10.10.10.1
+ passive-interface default
+ no passive-interface FastEthernet0/0
+ network 10.10.10.0 0.0.0.255 area 0
+ network 192.168.6.0 0.0.0.255 area 0
+exit
+
+no ip nat inside source list GUEST-NAT interface FastEthernet0/0 overload
+no ip access-list standard GUEST-NAT
+
+ip access-list extended HOME-NAT
+ deny ip 10.10.10.0 0.0.0.255 20.20.0.0 0.0.0.255
+ deny ip 10.10.10.0 0.0.0.255 30.30.0.0 0.0.0.255
+ deny ip 10.10.10.0 0.0.0.255 172.16.60.0 0.0.0.3
+ deny ip 10.10.10.0 0.0.0.255 172.16.61.0 0.0.0.3
+ permit ip 10.10.10.0 0.0.0.255 any
+exit
+
+ip nat inside source list HOME-NAT interface FastEthernet0/0 overload
+
+ip flow-export version 9
+
+! =========================================
+! REMOVE OLD SUMMARY DIAL PEERS
+! =========================================
+
+no dial-peer voice 20 voip
+no dial-peer voice 21 voip
+no dial-peer voice 22 voip
+no dial-peer voice 30 voip
+
+! =========================================
+! CLINIC DIAL PEERS (300 - 319)
+! =========================================
+
+dial-peer voice 300 voip
+ destination-pattern 300
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 301 voip
+ destination-pattern 301
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 302 voip
+ destination-pattern 302
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 303 voip
+ destination-pattern 303
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 304 voip
+ destination-pattern 304
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 305 voip
+ destination-pattern 305
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 306 voip
+ destination-pattern 306
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 307 voip
+ destination-pattern 307
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 308 voip
+ destination-pattern 308
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 309 voip
+ destination-pattern 309
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 310 voip
+ destination-pattern 310
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 311 voip
+ destination-pattern 311
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 312 voip
+ destination-pattern 312
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 313 voip
+ destination-pattern 313
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 314 voip
+ destination-pattern 314
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 315 voip
+ destination-pattern 315
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 316 voip
+ destination-pattern 316
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 317 voip
+ destination-pattern 317
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 318 voip
+ destination-pattern 318
+ session target ipv4:30.30.0.1
+exit
+dial-peer voice 319 voip
+ destination-pattern 319
+ session target ipv4:30.30.0.1
+exit
+
+! =========================================
+! HOSPITAL DIAL PEERS (0 - 5, 10 - 99, 110 - 129)
+! =========================================
+
+dial-peer voice 1000 voip
+ destination-pattern 0
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1001 voip
+ destination-pattern 1
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1002 voip
+ destination-pattern 2
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1003 voip
+ destination-pattern 3
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1004 voip
+ destination-pattern 4
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1005 voip
+ destination-pattern 5
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1010 voip
+ destination-pattern 10
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1011 voip
+ destination-pattern 11
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1012 voip
+ destination-pattern 12
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1013 voip
+ destination-pattern 13
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1014 voip
+ destination-pattern 14
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1015 voip
+ destination-pattern 15
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1016 voip
+ destination-pattern 16
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1017 voip
+ destination-pattern 17
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1018 voip
+ destination-pattern 18
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1019 voip
+ destination-pattern 19
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1020 voip
+ destination-pattern 20
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1021 voip
+ destination-pattern 21
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1022 voip
+ destination-pattern 22
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1023 voip
+ destination-pattern 23
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1024 voip
+ destination-pattern 24
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1025 voip
+ destination-pattern 25
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1026 voip
+ destination-pattern 26
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1027 voip
+ destination-pattern 27
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1028 voip
+ destination-pattern 28
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1029 voip
+ destination-pattern 29
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1030 voip
+ destination-pattern 30
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1031 voip
+ destination-pattern 31
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1032 voip
+ destination-pattern 32
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1033 voip
+ destination-pattern 33
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1034 voip
+ destination-pattern 34
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1035 voip
+ destination-pattern 35
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1036 voip
+ destination-pattern 36
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1037 voip
+ destination-pattern 37
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1038 voip
+ destination-pattern 38
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1039 voip
+ destination-pattern 39
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1040 voip
+ destination-pattern 40
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1041 voip
+ destination-pattern 41
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1042 voip
+ destination-pattern 42
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1043 voip
+ destination-pattern 43
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1044 voip
+ destination-pattern 44
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1045 voip
+ destination-pattern 45
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1046 voip
+ destination-pattern 46
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1047 voip
+ destination-pattern 47
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1048 voip
+ destination-pattern 48
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1049 voip
+ destination-pattern 49
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1050 voip
+ destination-pattern 50
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1051 voip
+ destination-pattern 51
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1052 voip
+ destination-pattern 52
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1053 voip
+ destination-pattern 53
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1054 voip
+ destination-pattern 54
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1055 voip
+ destination-pattern 55
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1056 voip
+ destination-pattern 56
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1057 voip
+ destination-pattern 57
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1058 voip
+ destination-pattern 58
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1059 voip
+ destination-pattern 59
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1060 voip
+ destination-pattern 60
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1061 voip
+ destination-pattern 61
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1062 voip
+ destination-pattern 62
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1063 voip
+ destination-pattern 63
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1064 voip
+ destination-pattern 64
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1065 voip
+ destination-pattern 65
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1066 voip
+ destination-pattern 66
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1067 voip
+ destination-pattern 67
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1068 voip
+ destination-pattern 68
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1069 voip
+ destination-pattern 69
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1070 voip
+ destination-pattern 70
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1071 voip
+ destination-pattern 71
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1072 voip
+ destination-pattern 72
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1073 voip
+ destination-pattern 73
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1074 voip
+ destination-pattern 74
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1075 voip
+ destination-pattern 75
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1076 voip
+ destination-pattern 76
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1077 voip
+ destination-pattern 77
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1078 voip
+ destination-pattern 78
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1079 voip
+ destination-pattern 79
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1080 voip
+ destination-pattern 80
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1081 voip
+ destination-pattern 81
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1082 voip
+ destination-pattern 82
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1083 voip
+ destination-pattern 83
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1084 voip
+ destination-pattern 84
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1085 voip
+ destination-pattern 85
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1086 voip
+ destination-pattern 86
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1087 voip
+ destination-pattern 87
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1088 voip
+ destination-pattern 88
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1089 voip
+ destination-pattern 89
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1090 voip
+ destination-pattern 90
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1091 voip
+ destination-pattern 91
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1092 voip
+ destination-pattern 92
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1093 voip
+ destination-pattern 93
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1094 voip
+ destination-pattern 94
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1095 voip
+ destination-pattern 95
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1096 voip
+ destination-pattern 96
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1097 voip
+ destination-pattern 97
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1098 voip
+ destination-pattern 98
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1099 voip
+ destination-pattern 99
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1110 voip
+ destination-pattern 110
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1111 voip
+ destination-pattern 111
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1112 voip
+ destination-pattern 112
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1113 voip
+ destination-pattern 113
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1114 voip
+ destination-pattern 114
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1115 voip
+ destination-pattern 115
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1116 voip
+ destination-pattern 116
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1117 voip
+ destination-pattern 117
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1118 voip
+ destination-pattern 118
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1119 voip
+ destination-pattern 119
+ session target ipv4:20.20.0.1
+exit
+
+dial-peer voice 1120 voip
+ destination-pattern 120
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1121 voip
+ destination-pattern 121
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1122 voip
+ destination-pattern 122
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1123 voip
+ destination-pattern 123
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1124 voip
+ destination-pattern 124
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1125 voip
+ destination-pattern 125
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1126 voip
+ destination-pattern 126
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1127 voip
+ destination-pattern 127
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1128 voip
+ destination-pattern 128
+ session target ipv4:20.20.0.1
+exit
+dial-peer voice 1129 voip
+ destination-pattern 129
+ session target ipv4:20.20.0.1
+exit
+
+! =========================================
+! TELEPHONY SERVICE
+! =========================================
+
+telephony-service
+ max-ephones 5
+ max-dn 5
+ ip source-address 10.10.10.1 port 2000
+ auto assign 1 to 5
+ create cnf-files
+exit
+
+ephone-dn 1
+ number 2000
+exit
+
+line con 0
+ login local
+exit
+
+line aux 0
+exit
+
+line vty 0 4
+ login local
+exit
+
+end
+write memory
