@@ -94,5 +94,3 @@ The design prioritizes **patient safety**, **data privacy**, and **zero-downtime
 - [x] **Phase 1:** Requirements Analysis, Hierarchical Topology Design, Device & Media Selection, Communication Analysis
 - [ ] **Phase 2:** VLSM IP Addressing Scheme & VLAN Trunking Configuration
 - [ ] **Phase 3:** Layer-3 Inter-VLAN Routing & HSRP Gateway Redundancy
-- [ ] **Phase 4:** Extended ACLs (Enforcing IT-Only Cross-VLAN Access) & ASA Firewall Failover
-- [ ] **Phase 5:** WAN Routing, VoIP Call Manager Express (CME), and QoS Implementation
